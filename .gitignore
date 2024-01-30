@@ -162,6 +162,7 @@ cython_debug/
 # Legendary City Cruncher stuff
 data/allCountries.zip
 data/allCountries.txt
+data/tmp
 output/
 .DS_Store
 .DS_Store?
