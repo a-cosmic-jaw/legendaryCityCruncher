@@ -88,6 +88,7 @@ def create_dataframe(country_code, tsv_filename):
     df[["population"]] = df[["population"]].apply(pd.to_numeric)
 
     cities = df.loc[df["feature class"] == "P"] # Sort out only cities
+    cities = cities.loc[cities["feature code"] != "PPLX"]
     if glob.population_size:
         cities = cities.loc[cities["population"] > glob.population_size] # Sort out on population size
 
