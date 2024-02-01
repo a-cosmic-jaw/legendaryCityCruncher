@@ -220,7 +220,7 @@
     "GP": {"country": "Guadeloupe", "continent": ""},
     "GS": {"country": "South Georgia and the South Sandwich Islands", "continent": ""},
     "GU": {"country": "Guam", "continent": ""},
-    "HK": {"country": "Hong Kong", "continent": ""},
+    "HK": {"country": "Hong Kong", "continent": "Asia"},
     "HM": {"country": "Heard Island and McDonald Islands", "continent": ""},
     "IM": {"country": "Isle of Man", "continent": "Europe"},
     "IO": {"country": "British Indian Ocean Territory", "continent": ""},
