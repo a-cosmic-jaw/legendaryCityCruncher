@@ -2,7 +2,7 @@ default:
 	python3 src/main.py
 
 clean:
-	rm data/allCountries.zip
+	rm -R data/tmp output/
 
 help:
 	python3 src/main.py --help
