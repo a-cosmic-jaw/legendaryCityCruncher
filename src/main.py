@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import zipfile
 import click
-import subprocess
+import json
 
 
 class Glob(object):
@@ -91,8 +91,9 @@ def create_dataframe(country_code, tsv_filename):
     if glob.population_size:
         cities = cities.loc[cities["population"] > glob.population_size] # Sort out on population size
 
-    states = df.loc[df["feature class"] == "A"] # Sort out only cities
-    print_status(country_code + " contains " + str(len(cities.index)) + " cities...")
+    states = df.loc[df["feature code"] == "ADM1"] # Sort out only states
+    print_status(country_code + " contains " + str(len(cities.index)) + " cities of the right size...")
+    print_status(country_code + " contains " + str(len(states.index)) + " states...")
 
     return cities, states
 
@@ -112,56 +113,61 @@ def get_country_codes():
 
 
 def print_city(city):
-    print("GeonameId: " + city["geonameid"])
-    print("Name: " + city["name"])
-    print("ASCII name: " + city["asciiname"])
-    print("Alternative names: " + city["alternatenames"])
-    print("Latitude: " + city["latitude"])
-    print("Longitude: " + city["longitude"])
-    print("Feature class:" + city["feature class"])
-    print("Feature codfe: " + city["feature code"])
-    print("Country code: " + city["country code"])
+    print("GeonameId: " + str(city["geonameid"]))
+    print("Name: " + str(city["name"]))
+    print("ASCII name: " + str(city["asciiname"]))
+    print("Alternative names: " + str(city["alternatenames"]))
+    print("Latitude: " + str(city["latitude"]))
+    print("Longitude: " + str(city["longitude"]))
+    print("Feature class:" + str(city["feature class"]))
+    print("Feature code: " + str(city["feature code"]))
+    print("Country code: " + str(city["country code"]))
     print("Alternate country codes: " + str(city["cc2"]))
     print("Admin code: ")
-    print("\t1: " + city["admin1 code"])
-    print("\t2: " + city["admin2 code"])
+    print("\t1: " + str(city["admin1 code"]))
+    print("\t2: " + str(city["admin2 code"]))
     print("\t3: " + str(city["admin3 code"]))
     print("\t4: " + str(city["admin4 code"]))
     print("Population: " + str(city["population"]))
     print("Elevation: " + str(city["elevation"]))
-    print("Digital elevation model: " + city["dem"])
-    print("Timezone: " + city["timezone"])
-    print("Modification date: " + city["modification date"])
+    print("Digital elevation model: " + str(city["dem"]))
+    print("Timezone: " + str(city["timezone"]))
+    print("Modification date: " + str(city["modification date"]))
 
 
 def dataframe_to_json(country_code, cities_df, states_df):
     ret = []
     for index, row in cities_df.iterrows():
-        if True:
-            print_city(row)
         city = {"name": row["name"], "state": None, "data": []}
-        if country_code == "US":
-            city["state"] = row["admin1 code"]
-
+        state = states_df.loc[states_df["admin1 code"] == row["admin1 code"]]
+        city["state"] = state.name.to_string(index=False).replace(" County", "")
         ret.append(city)
 
     return ret
 
 
-def crunch():
-    print_status("Starting crunch mode...")
+def save_to_file(country_code, json_data):
+    print_status("Writing JSON file for '" + country_code + "'...")
+
+    with open("output/" + country_code + ".json", "w") as json_file:
+        json_file.write(
+            json.dumps(json_data, indent=4, ensure_ascii=False)
+        )
+
+
+def crunch(country_code):
+    print_status("Starting crunch mode for '" + country_code + "'...")
     global glob
 
-    for country_code in get_country_codes():
-        download_country(country_code)
-        unzip_country(country_code)
-        tsv_filename = create_tsv_file(country_code)
-        cities_df, states_df = create_dataframe(country_code, tsv_filename)
-        json_data = dataframe_to_json(country_code, cities_df, states_df)
-        print(json_data)
-        remove_country(country_code)
+    download_country(country_code)
+    unzip_country(country_code)
+    tsv_filename = create_tsv_file(country_code)
+    cities_df, states_df = create_dataframe(country_code, tsv_filename)
+    json_data = dataframe_to_json(country_code, cities_df, states_df)
+    save_to_file(country_code, json_data)
+    remove_country(country_code)
 
-    print_status("Done crunching...")
+    print_status("Done crunching '" + country_code + "'...")
 
 
 @click.command("main")
@@ -174,7 +180,9 @@ def main(verbose, population, country_codes):
     
     print_status("Starting Legendary City Cruncher...")
     
-    crunch()
+    for country_code in get_country_codes():
+        crunch(country_code)
+    
     clean_up()
 
     print_status("Done!")
